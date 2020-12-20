@@ -12,8 +12,8 @@ real(mp), allocatable :: x(:), y(:), residuals(:,:)
 real(mp), allocatable :: u_init_guess(:,:), u(:,:)
 integer :: i,j ! counter
 integer :: file_id
-N = 5
-M = 5
+N = 20
+M = 20
 lx = 1.0_mp
 ly = 1.0_mp
 c1 = 1.0_mp
@@ -28,10 +28,10 @@ call coord_grid(N,M,lx,ly,x,y,hx,hy)
 
 u_init_guess = 0.0_mp
 
-open(unit=1,file='C:\Users\Marta\source\repos\elliptic_solver\elliptic_solver\iterative_method_5.txt',status='replace')
+!open(unit=1,file='C:\Users\Marta\source\repos\elliptic_solver\elliptic_solver\iterative_method_5.txt',status='replace')
 !open(unit=2,file='C:\Users\Marta\source\repos\elliptic_solver\elliptic_solver\iterative_method_10.txt',status='replace')
-!open(unit=3,file='C:\Users\Marta\source\repos\elliptic_solver\elliptic_solver\iterative_method_20.txt',status='replace')
-file_id = 1
+open(unit=3,file='C:\Users\Marta\source\repos\elliptic_solver\elliptic_solver\iterative_method_20.txt',status='replace')
+file_id = 3
 call iterative_method(p, q, f, mu, u_init_guess, x, y, hx, hy, lx, ly, c1, c2, d1, d2, eps, u, file_id)
 
 write(file_id,*)'U(x,y):'
