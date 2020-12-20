@@ -26,5 +26,14 @@
 	<Files>
 		<Filter Name="Header Files" Filter="fi;fd;h;inc"/>
 		<Filter Name="Resource Files" Filter="rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe"/>
-		<Filter Name="Source Files" Filter="f90;for;f;fpp;ftn;def;odl;idl"/></Files>
+		<Filter Name="Source Files" Filter="f90;for;f;fpp;ftn;def;odl;idl">
+		<File RelativePath=".\constants.f90"/>
+		<File RelativePath=".\elliptic_equation_solver.f90"/>
+		<File RelativePath=".\input_function_interface.f90"/>
+		<File RelativePath=".\input_functions.f90"/>
+		<File RelativePath=".\iterative_method_10.txt"/>
+		<File RelativePath=".\iterative_method_20.txt"/>
+		<File RelativePath=".\iterative_method_5.txt"/>
+		<File RelativePath=".\main.f90"/>
+		<File RelativePath=".\precision.f90"/></Filter></Files>
 	<Globals/></VisualStudioProject>
