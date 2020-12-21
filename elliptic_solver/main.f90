@@ -27,12 +27,17 @@ allocate(u_init_guess(0:N,0:M), u(0:N,0:M))
 call coord_grid(N,M,lx,ly,x,y,hx,hy)
 
 u_init_guess = 0.0_mp
-
+!file_id = 3
 !open(unit=1,file='C:\Users\Marta\source\repos\elliptic_solver\elliptic_solver\iterative_method_5.txt',status='replace')
 !open(unit=2,file='C:\Users\Marta\source\repos\elliptic_solver\elliptic_solver\iterative_method_10.txt',status='replace')
-open(unit=3,file='C:\Users\Marta\source\repos\elliptic_solver\elliptic_solver\iterative_method_20.txt',status='replace')
-file_id = 3
-call iterative_method(p, q, f, mu, u_init_guess, x, y, hx, hy, lx, ly, c1, c2, d1, d2, eps, u, file_id)
+!open(unit=3,file='C:\Users\Marta\source\repos\elliptic_solver\elliptic_solver\iterative_method_20.txt',status='replace')
+!call iterative_method(p, q, f, mu, u_init_guess, x, y, hx, hy, lx, ly, c1, c2, d1, d2, eps, u, file_id)
+
+!open(unit=4,file='C:\Users\Marta\source\repos\elliptic_solver\elliptic_solver\seidel_method_5.txt',status='replace')
+!open(unit=5,file='C:\Users\Marta\source\repos\elliptic_solver\elliptic_solver\seidel_method_10.txt',status='replace')
+open(unit=6,file='C:\Users\Marta\source\repos\elliptic_solver\elliptic_solver\seidel_method_20.txt',status='replace')
+file_id = 6
+call gauss_seidel_method(p, q, f, mu, u_init_guess, x, y, hx, hy, lx, ly, c1, c2, d1, d2, eps, u, file_id)
 
 write(file_id,*)'U(x,y):'
 write(file_id,'("y \ x     ",6("    &    ",f10.3))') x(0), x(1), x(2), x(3), x(4), x(5)
