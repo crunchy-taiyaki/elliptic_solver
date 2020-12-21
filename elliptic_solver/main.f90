@@ -40,9 +40,14 @@ u_init_guess = 0.0_mp
 
 !open(unit=7,file='C:\Users\Marta\source\repos\elliptic_solver\elliptic_solver\upper_relaxation_5.txt',status='replace')
 !open(unit=8,file='C:\Users\Marta\source\repos\elliptic_solver\elliptic_solver\upper_relaxation_10.txt',status='replace')
-open(unit=9,file='C:\Users\Marta\source\repos\elliptic_solver\elliptic_solver\upper_relaxation_20.txt',status='replace')
-file_id = 9
-call successive_over_relaxation_method(p, q, f, mu, u_init_guess, x, y, hx, hy, lx, ly, c1, c2, d1, d2, eps, u, file_id)
+!open(unit=9,file='C:\Users\Marta\source\repos\elliptic_solver\elliptic_solver\upper_relaxation_20.txt',status='replace')
+!call successive_over_relaxation_method(p, q, f, mu, u_init_guess, x, y, hx, hy, lx, ly, c1, c2, d1, d2, eps, u, file_id)
+
+!open(unit=10,file='C:\Users\Marta\source\repos\elliptic_solver\elliptic_solver\triangle_5.txt',status='replace')
+!open(unit=11,file='C:\Users\Marta\source\repos\elliptic_solver\elliptic_solver\triangle_10.txt',status='replace')
+open(unit=12,file='C:\Users\Marta\source\repos\elliptic_solver\elliptic_solver\triangle_20.txt',status='replace')
+file_id = 12
+call triangle_matrix_method(p, q, f, mu, u_init_guess, x, y, hx, hy, lx, ly, c1, c2, d1, d2, eps, u, file_id)
 
 write(file_id,*)'U(x,y):'
 write(file_id,'("y \ x     ",6("    &    ",f10.3))') x(0), x(1), x(2), x(3), x(4), x(5)
