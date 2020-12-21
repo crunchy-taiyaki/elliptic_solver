@@ -38,5 +38,8 @@
 		<File RelativePath=".\precision.f90"/>
 		<File RelativePath=".\seidel_method_10.txt"/>
 		<File RelativePath=".\seidel_method_20.txt"/>
-		<File RelativePath=".\seidel_method_5.txt"/></Filter></Files>
+		<File RelativePath=".\seidel_method_5.txt"/>
+		<File RelativePath=".\upper_relaxation_10.txt"/>
+		<File RelativePath=".\upper_relaxation_20.txt"/>
+		<File RelativePath=".\upper_relaxation_5.txt"/></Filter></Files>
 	<Globals/></VisualStudioProject>

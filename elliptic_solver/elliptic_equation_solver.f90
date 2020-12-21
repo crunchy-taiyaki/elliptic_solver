@@ -201,10 +201,10 @@ module elliptic_equation_solver
     allocate(u_ref(0:N,0:M),u_dif_k(0:max_iter),rho_dep_residual(0:max_iter),dash_rho_k(0:max_iter))!dummy
     u = u0
 
-    forall (j=0:M) u(0,j) = mu(x(0),y(j))
-    forall (j=0:M) u(N,j) = mu(x(N),y(j))
-    forall (i=0:N) u(i,0) = mu(x(i),y(0))
-    forall (i=0:N) u(i,N) = mu(x(i),y(N))
+    forall (j=0:M) u(0,j) = mu(0.0_mp,y(j))
+    forall (j=0:M) u(N,j) = mu(lx,y(j))
+    forall (i=1:N-1) u(i,0) = mu(x(i),0.0_mp)
+    forall (i=1:N-1) u(i,M) = mu(x(i),ly)
     k = 0
     u_dif_k(0) = 1.0_mp
     do while (k.lt.max_iter)
@@ -299,37 +299,85 @@ module elliptic_equation_solver
     integer :: i,j ! grid nodes counters
     real(mp) :: delta(1:2), xi, omega
     real(mp), allocatable :: u_prev(:,:)
+    real(mp), allocatable :: Lh_u(:,:), Lh_u0(:,:),f_ij(:,:), residual_k(:), abs_residual_k(:), u_ref(:,:), u_dif_k(:), dash_rho_k(:)!dummy
+    real(mp), allocatable :: rho_dep_residual(:)!dummy
+    real(mp) :: residual_u0, abs_residual_u0 !dummy
 
     
     delta = eigenvalues_interval(lx,ly,hx,hy,c1,c2,d1,d2)
-    rho = (delta(2)-delta(1))/(delta(2)+delta(1))
     xi = delta(1)/delta(2)
-    max_iter = log(1.0_mp/eps)/sqrt(xi)
-    omega = 2.0_mp/(1.0_mp + sqrt(1-rho**2))
+    max_iter = int(log(1.0_mp/eps)/sqrt(xi)) + 1
+    rho = (delta(2)-delta(1))/(delta(2)+delta(1))
+    omega = 2.0_mp/(1.0_mp + sqrt(1.0_mp-rho**2))
     S = omega - 1.0_mp
     N = size(x)-1
     M = size(y)-1
     allocate(u_prev(0:N,0:M))
+    allocate(Lh_u(0:N,0:M),Lh_u0(0:N,0:M),f_ij(0:N,0:M),residual_k(0:max_iter),abs_residual_k(0:max_iter))!dummy
+    allocate(u_ref(0:N,0:M),u_dif_k(0:max_iter),rho_dep_residual(0:max_iter),dash_rho_k(0:max_iter))!dummy
+
     u = u0
-    forall (j=0:M) u(0,j) = mu(x(0),y(j))
-    forall (j=0:M) u(N,j) = mu(x(N),y(j))
-    forall (i=0:N) u(i,0) = mu(x(i),y(0))
-    forall (i=0:N) u(i,N) = mu(x(i),y(N))
+    forall (j=0:M) u(0,j) = mu(0.0_mp,y(j))
+    forall (j=0:M) u(N,j) = mu(lx,y(j))
+    forall (i=1:N-1) u(i,0) = mu(x(i),0.0_mp)
+    forall (i=1:N-1) u(i,M) = mu(x(i),ly)
     k = 0
-    do while (k.ge.max_iter)
+    u_dif_k(0) = 1.0_mp
+    do while (k.lt.max_iter)
+        k = k+1
         u_prev = u
         do i=1,N-1
             do j=1,M-1
-                u(i,j) = u_prev(i,j) + omega*(f(x(i),y(j)) + p(x(i)+hx/2.0_mp,y(j))*(u_prev(i+1,j)-u_prev(i,j))/hx**2 - &
-                        & p(x(i)-hx/2.0_mp,y(j))*(u_prev(i,j)-u(i-1,j)/hx**2 + &
-                        & q(x(i),y(j)+hy/2.0_mp)*(u_prev(i+1,j)-u_prev(i,j))/hy**2 - &
-                        & q(x(i),y(j)-hy/2.0_mp)*(u_prev(i,j)-u(i-1,j)/hy**2) /&
-                        & (p(x(i)-hx/2.0_mp,y(j))/hx**2 + p(x(i)+hx/2.0_mp,y(j))/hx**2 +&
-                        & q(x(i),y(j))-hy/2.0_mp)/hy**2 + q(x(i),y(j)+hy/2.0_mp)/hy**2))
+                u(i,j) = u_prev(i,j) + omega*( f(x(i),y(j)) + p(x(i)+hx/2.0_mp,y(j))*(u_prev(i+1,j)-u_prev(i,j))/hx**2 - &
+                        & p(x(i)-hx/2.0_mp,y(j))*(u_prev(i,j)-u(i-1,j))/hx**2 + &
+                        & q(x(i),y(j)+hy/2.0_mp)*(u_prev(i,j+1)-u_prev(i,j))/hy**2 - &
+                        & q(x(i),y(j)-hy/2.0_mp)*(u_prev(i,j)-u(i,j-1))/hy**2 ) /&
+                        & ( p(x(i)-hx/2.0_mp,y(j))/hx**2 + p(x(i)+hx/2.0_mp,y(j))/hx**2 +&
+                        & q(x(i),y(j)-hy/2.0_mp)/hy**2 + q(x(i),y(j)+hy/2.0_mp)/hy**2 )
+  
+                Lh_u(i,j) = p(x(i)+hx/2.0_mp,y(j))*(u(i+1,j)-u(i,j))/hx**2 - &  !dummy
+                    & p(x(i)-hx/2.0_mp,y(j))*(u(i,j)-u(i-1,j))/hx**2 + &
+                    & q(x(i),y(j)+hy/2.0_mp)*(u(i,j+1)-u(i,j))/hy**2 - &
+                    & q(x(i),y(j)-hy/2.0_mp)*(u(i,j)-u(i,j-1))/hy**2
+                
+                f_ij(i,j) = f(x(i),y(j)) !dummy
+                u_ref(i,j) = reference_solution(x(i),y(j)) !dummy
             enddo
         enddo
-        k = k + 1
+        residual_k(k) = matrix_norm(Lh_u + f_ij) !dummy
+        abs_residual_k(k) = matrix_norm(u - u_ref)!dummy
+        u_dif_k(k) = matrix_norm(u - u_prev)!dummy
+        rho_dep_residual(k) = rho*u_dif_k(k)/(1.0_mp-rho)!dummy
+        if (k.lt.2) then !dummy
+            dash_rho_k(k) = sqrt(-1.d0) !dummy
+        else !dummy
+            dash_rho_k(k) = sqrt(u_dif_k(k)/u_dif_k(k-2))!dummy
+        endif !dummy
     enddo
+    !dummy part!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    do i=1,N-1
+        do j=1,M-1
+            Lh_u0(i,j) = p(x(i)+hx/2.0_mp,y(j))*(u0(i+1,j)-u0(i,j))/hx**2 - &
+                    & p(x(i)-hx/2.0_mp,y(j))*(u0(i,j)-u0(i-1,j))/hx**2 + &
+                    & q(x(i),y(j)+hy/2.0_mp)*(u0(i,j+1)-u0(i,j))/hy**2 - &
+                    & q(x(i),y(j)-hy/2.0_mp)*(u0(i,j)-u0(i,j-1))/hy**2
+        enddo
+    enddo
+
+    residual_u0 = matrix_norm(Lh_u0 + f_ij)
+    abs_residual_u0 = matrix_norm(u0 - u_ref)
+    write(file_id,*)'1) residual u*:',residual_k(max_iter)
+    write(file_id,*)'2) residual u0:',residual_u0
+    write(file_id,*)'3) eps:',eps,'m:',max_iter
+    write(file_id,*)'4) rho:', rho
+    write(file_id,'("    k    &    ||F-A*Uk||    &     rel.d        &     ||Uk-u*||    &     rel.error    &  ||Uk - Uk-1||   &    apost.er.     &    dash_rho_k")')   
+    do k=1, max_iter
+        write(file_id,'(i5,7("    &    ",e10.3))') k, residual_k(k), residual_k(k)/residual_u0, abs_residual_k(k), abs_residual_k(k)/abs_residual_u0,u_dif_k(k),rho_dep_residual(k),dash_rho_k(k)
+    enddo
+    write(file_id,*)
+    deallocate(Lh_u,Lh_u0,f_ij,residual_k,abs_residual_k)!dummy
+    deallocate(u_ref,u_dif_k,rho_dep_residual,dash_rho_k)!dummy
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     deallocate(u_prev)
     end subroutine successive_over_relaxation_method
             
