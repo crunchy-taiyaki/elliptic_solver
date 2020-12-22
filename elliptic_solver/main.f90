@@ -31,7 +31,7 @@ u_init_guess = 0.0_mp
 !open(unit=1,file='C:\Users\Marta\source\repos\elliptic_solver\elliptic_solver\iterative_method_5.txt',status='replace')
 !open(unit=2,file='C:\Users\Marta\source\repos\elliptic_solver\elliptic_solver\iterative_method_10.txt',status='replace')
 !open(unit=3,file='C:\Users\Marta\source\repos\elliptic_solver\elliptic_solver\iterative_method_20.txt',status='replace')
-!call iterative_method(p, q, f, mu, u_init_guess, x, y, hx, hy, lx, ly, c1, c2, d1, d2, eps, u, file_id)
+
 
 !open(unit=4,file='C:\Users\Marta\source\repos\elliptic_solver\elliptic_solver\seidel_method_5.txt',status='replace')
 !open(unit=5,file='C:\Users\Marta\source\repos\elliptic_solver\elliptic_solver\seidel_method_10.txt',status='replace')
@@ -45,8 +45,11 @@ u_init_guess = 0.0_mp
 
 !open(unit=10,file='C:\Users\Marta\source\repos\elliptic_solver\elliptic_solver\triangle_5.txt',status='replace')
 !open(unit=11,file='C:\Users\Marta\source\repos\elliptic_solver\elliptic_solver\triangle_10.txt',status='replace')
-open(unit=12,file='C:\Users\Marta\source\repos\elliptic_solver\elliptic_solver\triangle_20.txt',status='replace')
+!open(unit=12,file='C:\Users\Marta\source\repos\elliptic_solver\elliptic_solver\triangle_20.txt',status='replace')
 file_id = 12
+!call iterative_method(p, q, f, mu, u_init_guess, x, y, hx, hy, lx, ly, c1, c2, d1, d2, eps, u, file_id)
+!call gauss_seidel_method(p, q, f, mu, u_init_guess, x, y, hx, hy, lx, ly, c1, c2, d1, d2, eps, u, file_id)
+!call successive_over_relaxation_method(p, q, f, mu, u_init_guess, x, y, hx, hy, lx, ly, c1, c2, d1, d2, eps, u, file_id)
 call triangle_matrix_method(p, q, f, mu, u_init_guess, x, y, hx, hy, lx, ly, c1, c2, d1, d2, eps, u, file_id)
 
 write(file_id,*)'U(x,y):'
@@ -59,7 +62,12 @@ write(file_id,*)
 write(file_id,*)'U*(x,y):'
 write(file_id,'("y \ x     ",6("    &    ",f10.3))') x(0), x(1), x(2), x(3), x(4), x(5)
 do j=0,M
-    write(file_id,'(f10.3,6("    &    ",f10.5))') y(j), reference_solution(x(0),y(j)), reference_solution(x(1),y(j)), reference_solution(x(2),y(j)), reference_solution(x(3),y(j)), reference_solution(x(4),y(j)), reference_solution(x(5),y(j)) !reference_solution(x(0),y(j))
+    write(file_id,'(f10.3,6("    &    ",f10.5))') y(j), reference_solution(x(0),y(j)),&
+                                                        &reference_solution(x(1),y(j)),&
+                                                        &reference_solution(x(2),y(j)),&
+                                                        &reference_solution(x(3),y(j)),&
+                                                        &reference_solution(x(4),y(j)),&
+                                                        &reference_solution(x(5),y(j))
 enddo
 close(file_id)
 deallocate(x,y,u_init_guess,u)   

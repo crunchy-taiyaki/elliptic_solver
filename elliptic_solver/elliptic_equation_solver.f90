@@ -72,9 +72,9 @@ module elliptic_equation_solver
     integer :: i,j ! grid nodes counters
     real(mp) :: delta(1:2), xi
     real(mp), allocatable :: u_prev(:,:)
-    real(mp), allocatable :: Lh_u(:,:), Lh_u0(:,:),f_ij(:,:), residual_k(:), abs_residual_k(:), u_ref(:,:), u_dif_k(:), dash_rho_k(:)!dummy
-    real(mp), allocatable :: rho_dep_residual(:)!dummy
-    real(mp) :: residual_u0, abs_residual_u0 !dummy
+    real(mp), allocatable :: Lh_u(:,:), Lh_u0(:,:),f_ij(:,:), residual_k(:), abs_residual_k(:), u_ref(:,:), u_dif_k(:), dash_rho_k(:)
+    real(mp), allocatable :: rho_dep_residual(:)
+    real(mp) :: residual_u0, abs_residual_u0
 
     delta = eigenvalues_interval(lx,ly,hx,hy,c1,c2,d1,d2)
     xi = delta(1)/delta(2)
@@ -83,8 +83,8 @@ module elliptic_equation_solver
     N = size(x)-1
     M = size(y)-1
     allocate(u_prev(0:N,0:M))
-    allocate(Lh_u(0:N,0:M),Lh_u0(0:N,0:M),f_ij(0:N,0:M),residual_k(0:max_iter),abs_residual_k(0:max_iter))!dummy
-    allocate(u_ref(0:N,0:M),u_dif_k(0:max_iter),rho_dep_residual(0:max_iter),dash_rho_k(0:max_iter))!dummy
+    allocate(Lh_u(0:N,0:M),Lh_u0(0:N,0:M),f_ij(0:N,0:M),residual_k(0:max_iter),abs_residual_k(0:max_iter))
+    allocate(u_ref(0:N,0:M),u_dif_k(0:max_iter),rho_dep_residual(0:max_iter),dash_rho_k(0:max_iter))
     u = u0
     
     forall (j=0:M) u(0,j) = mu(0.0_mp,y(j))
@@ -92,7 +92,7 @@ module elliptic_equation_solver
     forall (i=1:N-1) u(i,0) = mu(x(i),0.0_mp)
     forall (i=1:N-1) u(i,M) = mu(x(i),ly)
     k = 0
-    u_dif_k(0) = 1.0_mp !dummy
+    u_dif_k(0) = 1.0_mp
     do while (k.lt.max_iter)
         k = k+1
         u_prev = u
@@ -103,26 +103,26 @@ module elliptic_equation_solver
                         & f(x(i),y(j)))  /  (p(x(i)-hx/2.0_mp,y(j))/(hx**2) + p(x(i)+hx/2.0_mp,y(j))/(hx**2) +&
                         & q(x(i),y(j)-hy/2.0_mp)/(hy**2) + q(x(i),y(j)+hy/2.0_mp)/(hy**2))
                 
-                Lh_u(i,j) = p(x(i)+hx/2.0_mp,y(j))*(u(i+1,j)-u(i,j))/hx**2 - &  !dummy
+                Lh_u(i,j) = p(x(i)+hx/2.0_mp,y(j))*(u(i+1,j)-u(i,j))/hx**2 - & 
                     & p(x(i)-hx/2.0_mp,y(j))*(u(i,j)-u(i-1,j))/hx**2 + &
                     & q(x(i),y(j)+hy/2.0_mp)*(u(i,j+1)-u(i,j))/hy**2 - &
                     & q(x(i),y(j)-hy/2.0_mp)*(u(i,j)-u(i,j-1))/hy**2
                 
-                f_ij(i,j) = f(x(i),y(j)) !dummy
-                u_ref(i,j) = reference_solution(x(i),y(j)) !dummy
+                f_ij(i,j) = f(x(i),y(j))
+                u_ref(i,j) = reference_solution(x(i),y(j))
             enddo
         enddo
-        residual_k(k) = matrix_norm(Lh_u + f_ij) !dummy
-        abs_residual_k(k) = matrix_norm(u - u_ref)!dummy
-        u_dif_k(k) = matrix_norm(u - u_prev)!dummy
-        rho_dep_residual(k) = rho*u_dif_k(k)/(1.0_mp-rho)!dummy
-        if (k.lt.2) then !dummy
-            dash_rho_k(k) = sqrt(-1.d0) !dummy
-        else !dummy
-            dash_rho_k(k) = sqrt(u_dif_k(k)/u_dif_k(k-2))!dummy
-        endif !dummy
+        residual_k(k) = matrix_norm(Lh_u + f_ij)
+        abs_residual_k(k) = matrix_norm(u - u_ref)
+        u_dif_k(k) = matrix_norm(u - u_prev)
+        rho_dep_residual(k) = rho*u_dif_k(k)/(1.0_mp-rho)
+        if (k.lt.2) then
+            dash_rho_k(k) = sqrt(-1.d0) !instead of NaN
+        else
+            dash_rho_k(k) = sqrt(u_dif_k(k)/u_dif_k(k-2))
+        endif
     enddo
-    !dummy part!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+ 
     do i=1,N-1
         do j=1,M-1
             Lh_u0(i,j) = p(x(i)+hx/2.0_mp,y(j))*(u0(i+1,j)-u0(i,j))/hx**2 - &
@@ -143,9 +143,8 @@ module elliptic_equation_solver
         write(file_id,'(i5,7("    &    ",e10.3))') k, residual_k(k), residual_k(k)/residual_u0, abs_residual_k(k), abs_residual_k(k)/abs_residual_u0,u_dif_k(k),rho_dep_residual(k),dash_rho_k(k)
     enddo
     write(file_id,*)
-    deallocate(Lh_u,Lh_u0,f_ij,residual_k,abs_residual_k)!dummy
-    deallocate(u_ref,u_dif_k,rho_dep_residual,dash_rho_k)!dummy
-    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    deallocate(Lh_u,Lh_u0,f_ij,residual_k,abs_residual_k)
+    deallocate(u_ref,u_dif_k,rho_dep_residual,dash_rho_k)
     deallocate(u_prev)
     
     end subroutine iterative_method
@@ -186,9 +185,9 @@ module elliptic_equation_solver
     integer :: i,j ! grid nodes counters
     real(mp) :: delta(1:2), xi
     real(mp), allocatable :: u_prev(:,:)
-    real(mp), allocatable :: Lh_u(:,:), Lh_u0(:,:),f_ij(:,:), residual_k(:), abs_residual_k(:), u_ref(:,:), u_dif_k(:), dash_rho_k(:)!dummy
-    real(mp), allocatable :: rho_dep_residual(:)!dummy
-    real(mp) :: residual_u0, abs_residual_u0 !dummy
+    real(mp), allocatable :: Lh_u(:,:), Lh_u0(:,:),f_ij(:,:), residual_k(:), abs_residual_k(:), u_ref(:,:), u_dif_k(:), dash_rho_k(:)
+    real(mp), allocatable :: rho_dep_residual(:)
+    real(mp) :: residual_u0, abs_residual_u0 
     
     delta = eigenvalues_interval(lx,ly,hx,hy,c1,c2,d1,d2)
     xi = delta(1)/delta(2)
@@ -197,8 +196,8 @@ module elliptic_equation_solver
     N = size(x)-1
     M = size(y)-1
     allocate(u_prev(0:N,0:M))
-    allocate(Lh_u(0:N,0:M),Lh_u0(0:N,0:M),f_ij(0:N,0:M),residual_k(0:max_iter),abs_residual_k(0:max_iter))!dummy
-    allocate(u_ref(0:N,0:M),u_dif_k(0:max_iter),rho_dep_residual(0:max_iter),dash_rho_k(0:max_iter))!dummy
+    allocate(Lh_u(0:N,0:M),Lh_u0(0:N,0:M),f_ij(0:N,0:M),residual_k(0:max_iter),abs_residual_k(0:max_iter))
+    allocate(u_ref(0:N,0:M),u_dif_k(0:max_iter),rho_dep_residual(0:max_iter),dash_rho_k(0:max_iter))
     u = u0
 
     forall (j=0:M) u(0,j) = mu(0.0_mp,y(j))
@@ -217,26 +216,26 @@ module elliptic_equation_solver
                         & f(x(i),y(j)))  /  (p(x(i)-hx/2.0_mp,y(j))/hx**2 + p(x(i)+hx/2.0_mp,y(j))/hx**2 +&
                         & q(x(i),y(j)-hy/2.0_mp)/hy**2 + q(x(i),y(j)+hy/2.0_mp)/hy**2)
                 
-                Lh_u(i,j) = p(x(i)+hx/2.0_mp,y(j))*(u(i+1,j)-u(i,j))/hx**2 - &  !dummy
+                Lh_u(i,j) = p(x(i)+hx/2.0_mp,y(j))*(u(i+1,j)-u(i,j))/hx**2 - &  
                     & p(x(i)-hx/2.0_mp,y(j))*(u(i,j)-u(i-1,j))/hx**2 + &
                     & q(x(i),y(j)+hy/2.0_mp)*(u(i,j+1)-u(i,j))/hy**2 - &
                     & q(x(i),y(j)-hy/2.0_mp)*(u(i,j)-u(i,j-1))/hy**2
                 
-                f_ij(i,j) = f(x(i),y(j)) !dummy
-                u_ref(i,j) = reference_solution(x(i),y(j)) !dummy
+                f_ij(i,j) = f(x(i),y(j))
+                u_ref(i,j) = reference_solution(x(i),y(j))
             enddo
         enddo
-        residual_k(k) = matrix_norm(Lh_u + f_ij) !dummy
-        abs_residual_k(k) = matrix_norm(u - u_ref)!dummy
-        u_dif_k(k) = matrix_norm(u - u_prev)!dummy
-        rho_dep_residual(k) = rho*u_dif_k(k)/(1.0_mp-rho)!dummy
-        if (k.lt.2) then !dummy
-            dash_rho_k(k) = sqrt(-1.d0) !dummy
-        else !dummy
-            dash_rho_k(k) = sqrt(u_dif_k(k)/u_dif_k(k-2))!dummy
-        endif !dummy
+        residual_k(k) = matrix_norm(Lh_u + f_ij) 
+        abs_residual_k(k) = matrix_norm(u - u_ref)
+        u_dif_k(k) = matrix_norm(u - u_prev)
+        rho_dep_residual(k) = rho*u_dif_k(k)/(1.0_mp-rho)
+        if (k.lt.2) then 
+            dash_rho_k(k) = sqrt(-1.d0) !instead of NaN
+        else 
+            dash_rho_k(k) = sqrt(u_dif_k(k)/u_dif_k(k-2))
+        endif
     enddo
-    !dummy part!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
     do i=1,N-1
         do j=1,M-1
             Lh_u0(i,j) = p(x(i)+hx/2.0_mp,y(j))*(u0(i+1,j)-u0(i,j))/hx**2 - &
@@ -256,9 +255,8 @@ module elliptic_equation_solver
         write(file_id,'(i5,7("    &    ",e10.3))') k, residual_k(k), residual_k(k)/residual_u0, abs_residual_k(k), abs_residual_k(k)/abs_residual_u0,u_dif_k(k),rho_dep_residual(k),dash_rho_k(k)
     enddo
     write(file_id,*)
-    deallocate(Lh_u,Lh_u0,f_ij,residual_k,abs_residual_k)!dummy
-    deallocate(u_ref,u_dif_k,rho_dep_residual,dash_rho_k)!dummy
-    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    deallocate(Lh_u,Lh_u0,f_ij,residual_k,abs_residual_k)
+    deallocate(u_ref,u_dif_k,rho_dep_residual,dash_rho_k)
     deallocate(u_prev)
     end subroutine gauss_seidel_method
             
@@ -299,9 +297,9 @@ module elliptic_equation_solver
     integer :: i,j ! grid nodes counters
     real(mp) :: delta(1:2), xi, omega
     real(mp), allocatable :: u_prev(:,:)
-    real(mp), allocatable :: Lh_u(:,:), Lh_u0(:,:),f_ij(:,:), residual_k(:), abs_residual_k(:), u_ref(:,:), u_dif_k(:), dash_rho_k(:)!dummy
-    real(mp), allocatable :: rho_dep_residual(:)!dummy
-    real(mp) :: residual_u0, abs_residual_u0 !dummy
+    real(mp), allocatable :: Lh_u(:,:), Lh_u0(:,:),f_ij(:,:), residual_k(:), abs_residual_k(:), u_ref(:,:), u_dif_k(:), dash_rho_k(:)
+    real(mp), allocatable :: rho_dep_residual(:)
+    real(mp) :: residual_u0, abs_residual_u0 
 
     
     delta = eigenvalues_interval(lx,ly,hx,hy,c1,c2,d1,d2)
@@ -313,8 +311,8 @@ module elliptic_equation_solver
     N = size(x)-1
     M = size(y)-1
     allocate(u_prev(0:N,0:M))
-    allocate(Lh_u(0:N,0:M),Lh_u0(0:N,0:M),f_ij(0:N,0:M),residual_k(0:max_iter),abs_residual_k(0:max_iter))!dummy
-    allocate(u_ref(0:N,0:M),u_dif_k(0:max_iter),rho_dep_residual(0:max_iter),dash_rho_k(0:max_iter))!dummy
+    allocate(Lh_u(0:N,0:M),Lh_u0(0:N,0:M),f_ij(0:N,0:M),residual_k(0:max_iter),abs_residual_k(0:max_iter))
+    allocate(u_ref(0:N,0:M),u_dif_k(0:max_iter),rho_dep_residual(0:max_iter),dash_rho_k(0:max_iter))
 
     u = u0
     forall (j=0:M) u(0,j) = mu(0.0_mp,y(j))
@@ -335,26 +333,26 @@ module elliptic_equation_solver
                         & ( p(x(i)-hx/2.0_mp,y(j))/hx**2 + p(x(i)+hx/2.0_mp,y(j))/hx**2 +&
                         & q(x(i),y(j)-hy/2.0_mp)/hy**2 + q(x(i),y(j)+hy/2.0_mp)/hy**2 )
   
-                Lh_u(i,j) = p(x(i)+hx/2.0_mp,y(j))*(u(i+1,j)-u(i,j))/hx**2 - &  !dummy
+                Lh_u(i,j) = p(x(i)+hx/2.0_mp,y(j))*(u(i+1,j)-u(i,j))/hx**2 - & 
                     & p(x(i)-hx/2.0_mp,y(j))*(u(i,j)-u(i-1,j))/hx**2 + &
                     & q(x(i),y(j)+hy/2.0_mp)*(u(i,j+1)-u(i,j))/hy**2 - &
                     & q(x(i),y(j)-hy/2.0_mp)*(u(i,j)-u(i,j-1))/hy**2
                 
-                f_ij(i,j) = f(x(i),y(j)) !dummy
-                u_ref(i,j) = reference_solution(x(i),y(j)) !dummy
+                f_ij(i,j) = f(x(i),y(j)) 
+                u_ref(i,j) = reference_solution(x(i),y(j))
             enddo
         enddo
-        residual_k(k) = matrix_norm(Lh_u + f_ij) !dummy
-        abs_residual_k(k) = matrix_norm(u - u_ref)!dummy
-        u_dif_k(k) = matrix_norm(u - u_prev)!dummy
-        rho_dep_residual(k) = rho*u_dif_k(k)/(1.0_mp-rho)!dummy
-        if (k.lt.2) then !dummy
-            dash_rho_k(k) = sqrt(-1.d0) !dummy
-        else !dummy
-            dash_rho_k(k) = sqrt(u_dif_k(k)/u_dif_k(k-2))!dummy
-        endif !dummy
+        residual_k(k) = matrix_norm(Lh_u + f_ij) 
+        abs_residual_k(k) = matrix_norm(u - u_ref)
+        u_dif_k(k) = matrix_norm(u - u_prev)
+        rho_dep_residual(k) = rho*u_dif_k(k)/(1.0_mp-rho)
+        if (k.lt.2) then 
+            dash_rho_k(k) = sqrt(-1.d0) !instead of NaN
+        else 
+            dash_rho_k(k) = sqrt(u_dif_k(k)/u_dif_k(k-2))
+        endif
     enddo
-    !dummy part!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
     do i=1,N-1
         do j=1,M-1
             Lh_u0(i,j) = p(x(i)+hx/2.0_mp,y(j))*(u0(i+1,j)-u0(i,j))/hx**2 - &
@@ -375,9 +373,8 @@ module elliptic_equation_solver
         write(file_id,'(i5,7("    &    ",e10.3))') k, residual_k(k), residual_k(k)/residual_u0, abs_residual_k(k), abs_residual_k(k)/abs_residual_u0,u_dif_k(k),rho_dep_residual(k),dash_rho_k(k)
     enddo
     write(file_id,*)
-    deallocate(Lh_u,Lh_u0,f_ij,residual_k,abs_residual_k)!dummy
-    deallocate(u_ref,u_dif_k,rho_dep_residual,dash_rho_k)!dummy
-    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    deallocate(Lh_u,Lh_u0,f_ij,residual_k,abs_residual_k)
+    deallocate(u_ref,u_dif_k,rho_dep_residual,dash_rho_k)
     deallocate(u_prev)
     end subroutine successive_over_relaxation_method
             
@@ -421,9 +418,9 @@ module elliptic_equation_solver
     real(mp) :: Lh_u_prev
     real(mp), allocatable :: u_prev(:,:)
     real(mp), allocatable :: dash_omega(:,:), omega_k(:,:)
-    real(mp), allocatable :: Lh_u(:,:), Lh_u0(:,:),f_ij(:,:), residual_k(:), abs_residual_k(:), u_ref(:,:), u_dif_k(:), dash_rho_k(:)!dummy
-    real(mp), allocatable :: rho_dep_residual(:)!dummy
-    real(mp) :: residual_u0, abs_residual_u0 !dummy
+    real(mp), allocatable :: Lh_u(:,:), Lh_u0(:,:),f_ij(:,:), residual_k(:), abs_residual_k(:), u_ref(:,:), u_dif_k(:), dash_rho_k(:)
+    real(mp), allocatable :: rho_dep_residual(:)
+    real(mp) :: residual_u0, abs_residual_u0
     delta(1) = c1*4.0_mp*sin(pi*hx/2.0_mp/lx)**2/hx**2 + d1*4.0_mp*sin(pi*hy/2.0_mp/ly)**2/hy**2
     delta(2) = c2*4.0_mp/hx**2 + d2*4.0_mp/hy**2
     eta = delta(1)/delta(2)
@@ -439,8 +436,8 @@ module elliptic_equation_solver
     M = size(y)-1
     allocate(u_prev(0:N,0:M))
     allocate(dash_omega(0:N,0:M), omega_k(0:N,0:M))
-    allocate(Lh_u(0:N,0:M),Lh_u0(0:N,0:M),f_ij(0:N,0:M),residual_k(0:max_iter),abs_residual_k(0:max_iter))!dummy
-    allocate(u_ref(0:N,0:M),u_dif_k(0:max_iter),rho_dep_residual(0:max_iter),dash_rho_k(0:max_iter))!dummy   
+    allocate(Lh_u(0:N,0:M),Lh_u0(0:N,0:M),f_ij(0:N,0:M),residual_k(0:max_iter),abs_residual_k(0:max_iter))
+    allocate(u_ref(0:N,0:M),u_dif_k(0:max_iter),rho_dep_residual(0:max_iter),dash_rho_k(0:max_iter))  
 
     u = u0
     omega_k = 0.0_mp
@@ -451,7 +448,7 @@ module elliptic_equation_solver
     forall (i=1:N-1) u(i,0) = mu(x(i),0.0_mp)
     forall (i=1:N-1) u(i,N) = mu(x(i),ly)
     k = 0
-    u_dif_k(0) = 1.0_mp !dummy
+    u_dif_k(0) = 1.0_mp
     do while (k.lt.max_iter)
         k = k+1
         u_prev = u
@@ -467,13 +464,13 @@ module elliptic_equation_solver
                         & Lh_u_prev + f(x(i),y(j)) ) / ( 1.0_mp + k1*p(x(i)-hx/2.0_mp,y(j)) + &
                         & k2*q(x(i),y(j)-hy/2.0_mp) )
                 
-                Lh_u(i,j) = p(x(i)+hx/2.0_mp,y(j))*(u(i+1,j)-u(i,j))/hx**2 - &  !dummy
+                Lh_u(i,j) = p(x(i)+hx/2.0_mp,y(j))*(u(i+1,j)-u(i,j))/hx**2 - &
                     & p(x(i)-hx/2.0_mp,y(j))*(u(i,j)-u(i-1,j))/hx**2 + &
                     & q(x(i),y(j)+hy/2.0_mp)*(u(i,j+1)-u(i,j))/hy**2 - &
                     & q(x(i),y(j)-hy/2.0_mp)*(u(i,j)-u(i,j-1))/hy**2
                 
-                f_ij(i,j) = f(x(i),y(j)) !dummy
-                u_ref(i,j) = reference_solution(x(i),y(j)) !dummy
+                f_ij(i,j) = f(x(i),y(j))
+                u_ref(i,j) = reference_solution(x(i),y(j))
             enddo
         enddo
         do i=N-1,1,-1
@@ -486,17 +483,17 @@ module elliptic_equation_solver
             enddo
         enddo
         u = u_prev + tau*omega_k
-        residual_k(k) = matrix_norm(Lh_u + f_ij) !dummy
-        abs_residual_k(k) = matrix_norm(u - u_ref)!dummy
-        u_dif_k(k) = matrix_norm(u - u_prev)!dummy
-        rho_dep_residual(k) = rho*u_dif_k(k)/(1.0_mp-rho)!dummy
-        if (k.lt.2) then !dummy
-            dash_rho_k(k) = sqrt(-1.d0) !dummy
-        else !dummy
-            dash_rho_k(k) = sqrt(u_dif_k(k)/u_dif_k(k-2))!dummy
-        endif !dummy
+        residual_k(k) = matrix_norm(Lh_u + f_ij)
+        abs_residual_k(k) = matrix_norm(u - u_ref)
+        u_dif_k(k) = matrix_norm(u - u_prev)
+        rho_dep_residual(k) = rho*u_dif_k(k)/(1.0_mp-rho)
+        if (k.lt.2) then
+            dash_rho_k(k) = sqrt(-1.d0)!instead of NaN
+        else
+            dash_rho_k(k) = sqrt(u_dif_k(k)/u_dif_k(k-2))
+        endif
     enddo
-   !dummy part!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+ 
     do i=1,N-1
         do j=1,M-1
             Lh_u0(i,j) = p(x(i)+hx/2.0_mp,y(j))*(u0(i+1,j)-u0(i,j))/hx**2 - &
@@ -517,9 +514,8 @@ module elliptic_equation_solver
         write(file_id,'(i5,7("    &    ",e10.3))') k, residual_k(k), residual_k(k)/residual_u0, abs_residual_k(k), abs_residual_k(k)/abs_residual_u0,u_dif_k(k),rho_dep_residual(k),dash_rho_k(k)
     enddo
     write(file_id,*)
-    deallocate(Lh_u,Lh_u0,f_ij,residual_k,abs_residual_k)!dummy
-    deallocate(u_ref,u_dif_k,rho_dep_residual,dash_rho_k)!dummy
-    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!   
+    deallocate(Lh_u,Lh_u0,f_ij,residual_k,abs_residual_k)
+    deallocate(u_ref,u_dif_k,rho_dep_residual,dash_rho_k) 
     deallocate(u_prev)
     deallocate(dash_omega, omega_k)
     end subroutine triangle_matrix_method
